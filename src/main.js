@@ -8,8 +8,21 @@ const screenEclosionEgg = document.getElementById('screen-eclosion-egg');
 const errorPass = document.getElementById('error-pass');
 const header = document.getElementById('header');
 const footer = document.getElementById('footer');
+const pokFiltrados = document.getElementById('pok-filtrados');
 const searchByName = document.getElementById('search-by-name');
-const data = POKEMON.pokemon;
+let data = '';
+let eggs = '';
+fetch('https://raw.githubusercontent.com/Laboratoria/LIM010-data-lovers/master/src/data/pokemon/pokemon.json')
+  .then((promise) => {
+    return promise.json();
+  }).then((dataFetch) => {
+    data = dataFetch.pokemon;
+    eggs = searchEggs(data);
+    document.getElementById('filter').innerHTML = optionSelect(arrSelect(data.map(pok => pok.type)));
+    document.getElementById('weakness').innerHTML = optionSelect(arrSelect(data.map(pok => pok.weaknesses)));
+  }).catch((error) => {
+    console.log(error);
+  });
 
 let cont = 1;
 screenLogin.addEventListener('submit', (enter) => {
@@ -22,6 +35,10 @@ screenLogin.addEventListener('submit', (enter) => {
     screenHome.classList.remove('hide');
     screenLogin.classList.add('hide');
     home.classList.add('active');
+    const count = divideAtrapped(data);
+    document.getElementById('count-trapped').innerHTML = 'Atrapados: ' + count.atrapado;
+    document.getElementById('count-no-trapped').innerHTML = 'No atrapados: ' + count.noAtrapado;
+    showImg(data);
   } else if (cont > 2) {
     errorPass.innerHTML = ' Ha intentado demasiadas veces.';
     usuario.value = '';
@@ -48,98 +65,69 @@ home.addEventListener('click', () => {
   seePokemons.classList.remove('active');
   document.getElementById('filter').classList.add('hide');
   eggsKm.classList.remove('active');
-  document.getElementById('table').innerHTML = '';
   searchByName.classList.add('hide');
 });
 
-let text = '';
-let arrayType = [];
+const optionSelect = (array) => {
+  let options = '<option value=0>Todos</option>';
+  for (let i = 0; i < array.length; i++) {
+    options += `<option value='${array[i]}'>${array[i]}</option>`;
+  }
+  return options;
+};
 
 filter.addEventListener('change', () => {
+  document.getElementById('form').classList.remove('hide');
   document.getElementById('container-trap').classList.remove('hide');
-  document.getElementById('count-egg').innerHTML = '';
-  document.getElementById('pokemones').innerHTML = '';
   document.getElementById('search').value = '';
   const x = document.getElementById('filter').value;
-  arrayType = searchType(data, x);
-  const count = divideAtrapped(arrayType);
-  text = showImg(arrayType);
-  document.getElementById('weakness').selectedIndex = 0;
-  document.getElementById('order').selectedIndex = 0;
-  document.getElementById('count-trapped').innerHTML = 'Atrapados: ' + count.atrapado;
-  document.getElementById('count-no-trapped').innerHTML = 'No atrapados: ' + count.noAtrapado;
-  document.getElementById('pok-filtrados').innerHTML = text;
-});
-
-let texto = '';
-let arrayDebil = [];
-
-weakness.addEventListener('change', () => {
-  document.getElementById('container-trap').classList.remove('hide');
-  document.getElementById('count-egg').innerHTML = '';
-  document.getElementById('pokemones').innerHTML = '';
-  document.getElementById('search').value = '';
-  const x = document.getElementById('filter').value;
-  const debil = document.getElementById('weakness').value;
-  let count = {};
-
-  if (x === '0') {
-    arrayDebil = searchOnlyWeakness(data, debil);
-    count = divideAtrapped(arrayDebil);
-    texto = showImg(arrayDebil);
-    document.getElementById('order').selectedIndex = 0;
-    document.getElementById('count-trapped').innerHTML = 'Atrapados: ' + count.atrapado;
-    document.getElementById('count-no-trapped').innerHTML = 'No atrapados: ' + count.noAtrapado;
-    document.getElementById('pok-filtrados').innerHTML = texto;
-  } else {
-    arrayDebil = searchWeakness(data, x, debil);
-    if (arrayDebil.length === 0) {
-      document.getElementById('pok-filtrados').innerHTML = '<img src="https://vignette.wikia.nocookie.net/pokpiruleta/images/e/e0/Squirtle_XY.gif/revision/latest?cb=20140624162904&path-prefix=es"><p class="white">No se encontraron resultados.</p>';
-      document.getElementById('count-trapped').innerHTML = '';
-      document.getElementById('container-trap').classList.add('hide');
-      document.getElementById('count-no-trapped').innerHTML = '';
-    } else {
-      count = divideAtrapped(arrayDebil);
-      texto = showImg(arrayDebil);
-      document.getElementById('order').selectedIndex = 0;
-      document.getElementById('count-trapped').innerHTML = 'Atrapados: ' + count.atrapado;
-      document.getElementById('count-no-trapped').innerHTML = 'No atrapados: ' + count.noAtrapado;
-      document.getElementById('pok-filtrados').innerHTML = texto;
-    }
-  }
-});
-
-let ordered = [];
-
-order.addEventListener('change', () => {
-  document.getElementById('container-trap').classList.remove('hide');
-  document.getElementById('search').value = '';
-  const tipo = document.getElementById('filter').value;
   const debil = document.getElementById('weakness').value;
   const order = document.getElementById('order').value;
-  let text = '';
-  if (debil === '0' && tipo === '0') {
-    ordered = orderData(data, order);
-    text = showImg(ordered);
-  } else if (debil === '0') {
-    arrayType = searchType(data, tipo);
-    ordered = orderData(arrayType, order);
-    text = showImg(ordered);
-  } else if (tipo === '0') {
-    arrayDebil = searchOnlyWeakness(data, debil);
-    ordered = orderData(arrayDebil, order);
-    text = showImg(ordered);
+  if (searchWeakness(searchType(data, x), debil).length === 0) {
+    pokFiltrados.innerHTML = '<img src="https://vignette.wikia.nocookie.net/pokpiruleta/images/e/e0/Squirtle_XY.gif/revision/latest?cb=20140624162904&path-prefix=es"><p class="white">No se encontraron resultados.</p>';
+    document.getElementById('container-trap').classList.add('hide');
   } else {
-    arrayDebil = searchWeakness(data, tipo, debil);
-    ordered = orderData(arrayDebil, order);
-    text = showImg(ordered);
+    const count = divideAtrapped(searchWeakness(searchType(data, x), debil));
+    document.getElementById('count-trapped').innerHTML = 'Atrapados: ' + count.atrapado;
+    document.getElementById('count-no-trapped').innerHTML = 'No atrapados: ' + count.noAtrapado;
+    showImg(orderData(searchWeakness(searchType(data, x), debil), order));
   }
-  document.getElementById('pok-filtrados').innerHTML = text;
 });
 
-let list = '';
+weakness.addEventListener('change', () => {
+  document.getElementById('form').classList.remove('hide');
+  document.getElementById('container-trap').classList.remove('hide');
+  document.getElementById('search').value = '';
+  const x = document.getElementById('filter').value;
+  const debil = document.getElementById('weakness').value;
+  const order = document.getElementById('order').value;
+  if (searchWeakness(searchType(data, x), debil).length === 0) {
+    pokFiltrados.innerHTML = '<img src="https://vignette.wikia.nocookie.net/pokpiruleta/images/e/e0/Squirtle_XY.gif/revision/latest?cb=20140624162904&path-prefix=es"><p class="white">No se encontraron resultados.</p>';
+    document.getElementById('container-trap').classList.add('hide');
+  } else {
+    const count = divideAtrapped(searchWeakness(searchType(data, x), debil));
+    document.getElementById('count-trapped').innerHTML = 'Atrapados: ' + count.atrapado;
+    document.getElementById('count-no-trapped').innerHTML = 'No atrapados: ' + count.noAtrapado;
+    showImg(orderData(searchWeakness(searchType(data, x), debil), order));
+  }
+});
+
+order.addEventListener('change', () => {
+  document.getElementById('form').classList.remove('hide');
+  document.getElementById('container-trap').classList.remove('hide');
+  document.getElementById('search').value = '';
+  const x = document.getElementById('filter').value;
+  const debil = document.getElementById('weakness').value;
+  const order = document.getElementById('order').value;
+  const count = divideAtrapped(searchWeakness(searchType(data, x), debil), order);
+  document.getElementById('count-trapped').innerHTML = 'Atrapados: ' + count.atrapado;
+  document.getElementById('count-no-trapped').innerHTML = 'No atrapados: ' + count.noAtrapado;
+  showImg(orderData(searchWeakness(searchType(data, x), debil), order));
+});
+
 const seePokemons = document.getElementById('see-pokemons');
 seePokemons.addEventListener('click', () => {
+  document.getElementById('form').classList.remove('hide');
   document.getElementById('container-trap').classList.remove('hide');
   screenHome.classList.add('hide');
   screenPokemon.classList.remove('hide');
@@ -149,42 +137,31 @@ seePokemons.addEventListener('click', () => {
   home.classList.remove('active');
   seePokemons.classList.add('active');
   eggsKm.classList.remove('active');
-  document.getElementById('count-egg').innerHTML = '';
-  document.getElementById('pok-filtrados').innerHTML = '';
-  document.getElementById('table').innerHTML = '';
   document.getElementById('search').value = '';
-
-  document.getElementById('order').selectedIndex = 0;
-  document.getElementById('weakness').selectedIndex = 0;
-  document.getElementById('filter').selectedIndex = 0;
-  const count = divideAtrapped(data);
-  document.getElementById('count-trapped').innerHTML = 'Atrapados: ' + count.atrapado;
-  document.getElementById('count-no-trapped').innerHTML = 'No atrapados: ' + count.noAtrapado;
-
-  list = showImg(sortId(data));
-
-  document.getElementById('pokemones').innerHTML = list;
 });
 
-const searchButton = document.getElementById('search-button');
-searchButton.addEventListener('click', () => {
-  document.getElementById('order').selectedIndex = 0;
-  document.getElementById('weakness').selectedIndex = 0;
-  document.getElementById('filter').selectedIndex = 0;
-  document.getElementById('count-egg').innerHTML = '';
-  document.getElementById('pokemones').innerHTML = '';
-  document.getElementById('pok-filtrados').innerHTML = '';
-  document.getElementById('count-trapped').innerHTML = '';
-  document.getElementById('count-no-trapped').innerHTML = '';
-  document.getElementById('container-trap').classList.add('hide');
-  const searchText = document.getElementById('search').value;
-  let text = '';
-  let arrayName = searchName(data, searchText);
-  if (arrayName.length !== 0) {
-    text = showImg(arrayName);
-    document.getElementById('pok-filtrados').innerHTML = text;
+const searchInput = document.getElementById('search');
+searchInput.addEventListener('input', () => {
+  pokFiltrados.innerHTML = '';
+  const inputName = data.filter(pok => pok.name.toLowerCase().indexOf(event.target.value.toLowerCase()) >= 0);
+  if (event.target.value.length > 0) {
+    document.getElementById('form').classList.add('hide');
+    document.getElementById('container-trap').classList.add('hide');
+    if (inputName.length !== 0) {
+      showImg(inputName);
+    } else {
+      pokFiltrados.innerHTML = '<img src="https://vignette.wikia.nocookie.net/pokpiruleta/images/e/e0/Squirtle_XY.gif/revision/latest?cb=20140624162904&path-prefix=es"><p class="white">No se encontraron resultados.</p>';
+    }
   } else {
-    document.getElementById('pok-filtrados').innerHTML = '<p class="white">No se encontraron resultados.</p>';
+    document.getElementById('form').classList.remove('hide');
+    document.getElementById('container-trap').classList.remove('hide');
+    document.getElementById('order').selectedIndex = 0;
+    document.getElementById('filter').selectedIndex = 0;
+    document.getElementById('weakness').selectedIndex = 0;
+    const count = divideAtrapped(data);
+    document.getElementById('count-trapped').innerHTML = 'Atrapados: ' + count.atrapado;
+    document.getElementById('count-no-trapped').innerHTML = 'No atrapados: ' + count.noAtrapado;
+    showImg(data);
   }
 });
 
@@ -267,7 +244,7 @@ const showImg = (array) => {
       list += card;
     }
   }
-  return list;
+  return document.getElementById('pok-filtrados').innerHTML = list;
 };
 
 google.load('visualization', '1.0', { 'packages': ['corechart'] });
@@ -275,7 +252,6 @@ google.load('visualization', '1.0', { 'packages': ['table'] });
 const eggsKm = document.getElementById('eggs-km');
 eggsKm.addEventListener('click', () => {
   google.setOnLoadCallback(eggsKm);
-
   screenHome.classList.add('hide');
   screenPokemon.classList.add('hide');
   screenEclosionEgg.classList.remove('hide');
@@ -284,31 +260,32 @@ eggsKm.addEventListener('click', () => {
   home.classList.remove('active');
   seePokemons.classList.remove('active');
   eggsKm.classList.add('active');
-
-  document.getElementById('pokemones').innerHTML = '';
-  document.getElementById('pok-filtrados').innerHTML = '';
-
-  document.getElementById('order').selectedIndex = 0;
-  document.getElementById('weakness').selectedIndex = 0;
-  document.getElementById('filter').selectedIndex = 0;
   graphicPie();
 });
 
-const eggs = searchEggs(data);
 const egg2 = document.getElementById('2km');
 egg2.addEventListener('click', () => {
+  document.getElementById('2km').classList.add('kmActive');
+  document.getElementById('5km').classList.remove('kmActive');
+  document.getElementById('10km').classList.remove('kmActive');
   graphicPie();
   buildGraphic(0);
 });
 
 const egg5 = document.getElementById('5km');
 egg5.addEventListener('click', () => {
+  document.getElementById('2km').classList.remove('kmActive');
+  document.getElementById('5km').classList.add('kmActive');
+  document.getElementById('10km').classList.remove('kmActive');
   graphicPie();
   buildGraphic(1);
 });
 
 const egg10 = document.getElementById('10km');
 egg10.addEventListener('click', () => {
+  document.getElementById('2km').classList.remove('kmActive');
+  document.getElementById('5km').classList.remove('kmActive');
+  document.getElementById('10km').classList.add('kmActive');
   graphicPie();
   buildGraphic(2);
 });

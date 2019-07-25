@@ -162,31 +162,27 @@ const orderAsc = [
   },
 ];
 
-describe('searchName', () => {
+describe('arrSelect', () => {
   it('debería buscar los pokemones que empiecen con bul', () => {
-    expect(searchName(dataPokemon, 'bul')[0].name).toEqual('Bulbasaur');
-  });
-
-  it('debería buscar los pokemones que empiecen con BUL', () => {
-    expect(searchName(dataPokemon, 'BUL')[0].name).toEqual('Bulbasaur');
+    expect(arrSelect(dataPokemon.map(pok => pok.type))[0]).toEqual('Grass');
   });
 });
 
-describe('searchOnlyWeakness', () => {
+describe('searchWeakness', () => {
   it('debería mostrar los pokemones debiles a la electricidad', () => {
-    expect(searchOnlyWeakness(dataPokemon, 'Electric')[0].weaknesses).toEqual(['Electric', 'Rock']);
+    expect(searchWeakness(dataPokemon, '0')).toEqual(dataPokemon);
+  });
+  it('debería mostrar los pokemones debiles a la electricidad', () => {
+    expect(searchWeakness(dataPokemon, 'Electric')[0].weaknesses).toEqual(['Electric', 'Rock']);
   });
 });
 
 describe('searchType', () => {
   it('debería mostrar los pokemones de tipo normal', () => {
-    expect(searchType(dataPokemon, 'Normal')[0].type).toEqual(['Normal', 'Flying']);
+    expect(searchType(dataPokemon, '0')).toEqual(dataPokemon);
   });
-});
-
-describe('searchWeakness', () => {
-  it('debería mostrar los pokemones de tipo normal debiles a la electricidad', () => {
-    expect(searchWeakness(dataPokemon, 'Normal', 'Electric')[0].weaknesses).toEqual(['Electric', 'Rock']);
+  it('debería mostrar los pokemones de tipo normal', () => {
+    expect(searchType(dataPokemon, 'Normal')[0].type).toEqual(['Normal', 'Flying']);
   });
 });
 
@@ -207,12 +203,6 @@ describe('divideAtrapped', () => {
   });
 });
 
-describe('sortId', () => {
-  it('debería mostrar los pokemones ordenados por id', () => {
-    expect(sortId(dataPokemon)).toEqual(dataPokemon);
-  });
-});
-
 describe('orderData', () => {
   it('debería ordenar los pokemones de a-z', () => {
     expect(orderData(dataPokemon, 'order-a-z')).toEqual(orderDes);
@@ -226,16 +216,19 @@ describe('orderData', () => {
   it('debería ordenar los pokemones ascendente por frecuencia de aparicion', () => {
     expect(orderData(dataPokemon, 'order-asc')).toEqual(orderAsc);
   });
-  it('debería ordenar los pokemones descendente por frecuencia de aparicion', () => {
-    expect(orderData(dataPokemon, false)).toEqual(orderDes);
+  it('debería ordenar los pokemones ascendente por frecuencia de aparicion', () => {
+    expect(orderData(dataPokemon, false)[0].name).toEqual('Bulbasaur');
   });
   it('debería ordenar los pokemones ascendente por frecuencia de aparicion', () => {
     expect(orderData(dataPokemon, 'order-asc')[0].spawn_chance).toEqual(0.017);
   });
   it('debería ordenar los pokemones descendente por frecuencia de aparicion', () => {
-    expect(orderData(dataPokemon, 'order-desc')[0].spawn_chance).toEqual(0.69);
+    expect(orderData(dataPokemon, 'order-des')).toEqual(orderDes);
   });
   it('debería ordenar los pokemones descendente por frecuencia de aparicion', () => {
-    expect(orderData(dataPokemon, 'order-des')).toEqual(orderDes);
+    expect(orderData(dataPokemon, 'order-des')[0].spawn_chance).toEqual(0.69);
+  });
+  it('debería ordenar los pokemones descendente por frecuencia de aparicion', () => {
+    expect(orderData(dataPokemon, '0')).toEqual(dataPokemon);
   });
 });

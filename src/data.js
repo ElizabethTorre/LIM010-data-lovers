@@ -1,14 +1,24 @@
 // agregamos las funciones a nuestro objeto global window
-
-const searchName = (data, name) => {
-  return data.filter(dataRow => (dataRow.name.toLowerCase().indexOf(name.toLowerCase()) > -1));
+const arrSelect = (list) => {
+  const array = [];
+  for (let i = 0; i < list.length; i++) {
+    for (let j = 0; j < list[i].length; j++) {
+      array.push(list[i][j]);
+    }
+  }
+  const newArray = array.filter((item, index, arr) => {
+    return arr.indexOf(item) === index;
+  });
+  return newArray;
 };
+
 const searchType = (data, tipo) => {
-  let array = [];
-  array = data.filter(datum => datum.type[0] === tipo || datum.type[1] === tipo);
-  return array;
+  if (tipo === '0') {
+    return data;
+  } else {
+    return data.filter(datum => datum.type[0] === tipo || datum.type[1] === tipo);
+  }
 };
-
 
 const divideAtrapped = (array) => {
   let atrapado = 0;
@@ -26,30 +36,12 @@ const divideAtrapped = (array) => {
   };
 };
 
-const searchWeakness = (data, tipo, weakness) => {
-  let array = [];
-  for (let i = 0; i < data.length; i++) {
-    for (let j = 0; j < data[i].weaknesses.length; j++) {
-      for (let x = 0; x < data[i].type.length; x++) {
-        if (data[i].weaknesses[j] === weakness && data[i].type[x] === tipo) {
-          array.push(data[i]);
-        }
-      }
-    }
+const searchWeakness = (data, weakness) => {
+  if (weakness === '0') {
+    return data;
+  } else {
+    return data.filter(obj => obj.weaknesses.indexOf(weakness) > -1);
   }
-  return array;
-};
-
-const searchOnlyWeakness = (data, weakness) => {
-  let array = [];
-  for (let i = 0; i < data.length; i++) {
-    for (let j = 0; j < data[i].weaknesses.length; j++) {
-      if (data[i].weaknesses[j] === weakness) {
-        array.push(data[i]);
-      }
-    }
-  }
-  return array;
 };
 
 const searchEggs = (data) => {
@@ -66,12 +58,6 @@ const searchEggs = (data) => {
   ];
 };
 
-const sortId = (array) => {
-  let ordered = [];
-  ordered = array.sort((first, second) => (first.id > second.id ? 1 : -1));
-  return ordered;
-};
-
 const orderData = (array, condicion) => {
   let ordered = [];
   if (condicion === 'order-a-z') {
@@ -80,8 +66,10 @@ const orderData = (array, condicion) => {
     ordered = array.sort((first, second) => (first.name < second.name ? 1 : -1));
   } else if (condicion === 'order-asc') {
     ordered = array.sort((first, second) => (first.spawn_chance > second.spawn_chance ? 1 : -1));
-  } else {
+  } else if (condicion === 'order-des') {
     ordered = array.sort((first, second) => (first.spawn_chance < second.spawn_chance ? 1 : -1));
+  } else {
+    ordered = array.sort((first, second) => (first.num > second.num ? 1 : -1));
   }
   return ordered;
 };
@@ -94,12 +82,11 @@ const pushTable = (array, index) => {
   return tabla;
 };
 
-window.searchName = searchName;
 window.searchType = searchType;
 window.divideAtrapped = divideAtrapped;
 window.searchWeakness = searchWeakness;
-window.searchOnlyWeakness = searchOnlyWeakness;
+window.searchWeakness = searchWeakness;
 window.searchEggs = searchEggs;
 window.orderData = orderData;
 window.pushTable = pushTable;
-window.sortId = sortId;
+window.arrSelect = arrSelect;
